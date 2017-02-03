@@ -17,4 +17,4 @@ const createCore = () => {
 	return core
 }
 
-module.export = createCore
+module.exports = createCore

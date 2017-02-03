@@ -20,7 +20,9 @@
     "node": ">=6"
   },
   "dependencies": {
-    "gossip-object": "^2.3.4"
+    "gossip-object": "^2.3.4",
+    "signalhub": "^4.8.0",
+    "simple-peer": "^6.2.1"
   },
   "devDependencies": {
     "browserify": "^14.0.0",
@@ -29,6 +31,6 @@
   },
   "scripts": {
     "build": "env NODE_ENV=production browserify -t envify index.js > bundle.js",
-    "start": "env NODE_ENV=dev wzrd index.js -- -t envify"
+    "start": "env NODE_ENV=dev wzrd index.js -- -d -t envify"
   }
 }
