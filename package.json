@@ -20,6 +20,7 @@
     "node": ">=6"
   },
   "dependencies": {
+    "gossip-object": "^2.3.4"
   },
   "devDependencies": {
     "browserify": "^14.0.0",
