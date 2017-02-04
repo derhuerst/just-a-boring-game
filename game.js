@@ -2,7 +2,9 @@
 
 const {EventEmitter} = require('events')
 const Model = require('scuttlebutt/model')
+const createNamespace = require('./scuttlespace')
 const ndarray = require('ndarray')
+const pack = require('ndarray-pack')
 const {randomId} = require('./util')
 const createFinder = require('l1-path-finder')
 
@@ -12,6 +14,8 @@ const defaults = {
 	leader: false
 }
 
+const createMap = (w, h) => new Array(w).fill(0).map(() => new Array(h).fill(0))
+
 const createGame = (isLeader, opt = {}) => {
 	opt = Object.assign({}, defaults, opt)
 
@@ -20,7 +24,10 @@ const createGame = (isLeader, opt = {}) => {
 	// state
 
 	const model = new Model()
-	const map = ndarray(new Array(opt.width * opt.height).fill(0), [opt.width, opt.height])
+
+	const mapNS = createNamespace(model, 'map')
+	const map = ndarray(mapNS, [opt.width, opt.height])
+
 	const id = randomId()
 	let peerIds = new Set()
 
@@ -28,13 +35,9 @@ const createGame = (isLeader, opt = {}) => {
 
 	const addBlock = (x, y) => {
 		map.set(x, y, 1)
-		// todo: let ndarray directly read & write from model
-		model.set('map', map.data)
 	}
 	const removeBlock = (x, y) => {
 		map.set(x, y, 0)
-		// todo: let ndarray directly read & write from model
-		model.set('map', map.data)
 	}
 
 	const selectOwnField = (x, y) => {
@@ -50,8 +53,7 @@ const createGame = (isLeader, opt = {}) => {
 		})
 
 		if (isLeader) {
-			// todo: let ndarray directly read & write from model
-			model.set('map', map.data)
+			pack(createMap(opt.width, opt.height), map)
 
 			for (let peerId of peerIds) {
 				model.set(peerId + '-field', {
@@ -74,9 +76,7 @@ const createGame = (isLeader, opt = {}) => {
 	// model -> game
 
 	model.on('change', (key, value) => {
-		// todo: let ndarray directly read & write from model
-		if (key === 'map') map.data = value
-
+		if (mapNS.isOwnChange(key)) return
 		game.emit('state', model.toJSON(), key, value)
 	})
 

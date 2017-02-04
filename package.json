@@ -30,6 +30,7 @@
     "insert-styles": "^1.2.1",
     "l1-path-finder": "^1.0.0",
     "ndarray": "^1.0.18",
+    "ndarray-pack": "^1.2.1",
     "normals": "^1.1.0",
     "primitive-cube": "^2.0.0",
     "ray-3d": "^1.1.1",

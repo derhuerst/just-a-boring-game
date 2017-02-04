@@ -25,12 +25,9 @@ prompt.onSubmit = (channel, isLeader) => {
 
 	const onState = (state) => {
 		const ownField = state[game.id() + '-field']
-		console.log('ownField', ownField)
 		// todo: support more than one peer
 		const peerId = game.peerIds().values().next().value
-		console.log('peerId', peerId, game.peerIds())
 		const peerField = state[peerId + '-field']
-		console.log('peerField', peerField)
 
 		ui.setBlocks(game.map())
 		ui.selectOwnField(ownField)
