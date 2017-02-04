@@ -37,9 +37,9 @@ const getCubeModels = require('./cubeModels.js')
 let cubes = ndarray([], [ 20, 20 ])
 let cubeModels = []
 
-let ownField
-let peerField
-let hit
+const ownField = {}
+const peerField = {}
+let hit = {}
 
 
 
