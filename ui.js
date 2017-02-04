@@ -8,7 +8,7 @@ const vec3 = require('gl-matrix').vec3
 const vec4 = require('gl-matrix').vec4
 
 const shell = require('gl-now')({
-	tickRate: 10
+	tickRate: 50
 })
 
 shell.bind("move-left", "left", "A")
@@ -74,8 +74,8 @@ shell.on("gl-init", function() {
 
 	// shader
 	shader = createShader(shell.gl,
-	    glslify('./shaders/bunny.vert')
-	  , glslify('./shaders/bunny.frag')
+		glslify('./shaders/bunny.vert'),
+		glslify('./shaders/bunny.frag')
 	)
 })
 
@@ -90,10 +90,8 @@ cubeModels[0] = mat4.create()
 mat4.translate(cubeModels[0], cubeModels[0], [ -7.5, .5, -7.5 ])
 for (let i = 1; i <= 6; i++)
 	mat4.translate(cubeModels[i], cubeModels[i-1], [ 2, 0, 2 ])
-let red = [ 1, 0, 0 ]
-let black = [ 0, 0, 0 ]
-
 let hit
+let selected
 
 shell.on('tick', (() => {
 	let width = 20
@@ -120,9 +118,14 @@ shell.on('tick', (() => {
 			-width/2, width/2, -height/2, height/2,
 			near, far)
 
+
+
+
+
 		let invProjView = mat4.create()
 		mat4.multiply(invProjView, projection, view)
 		mat4.invert(invProjView, invProjView)
+
 		hit = cubeModels.findIndex((cubeModel) => {
 			let invModel = mat4.create()
 			let invProjViewModel = mat4.create()
@@ -133,31 +136,35 @@ shell.on('tick', (() => {
 				origin: vec3.create(),
 				direction: vec3.create()
 			}
-			pick(r.origin, r.direction, [ shell.mouse[0], shell.height - shell.mouse[0] ], [ 0, 0, shell.width, shell.height ], invProjViewModel)
+			pick(r.origin, r.direction, [ shell.mouse[0], shell.mouse[1] ], [ 0, 0, shell.width, shell.height ], invProjViewModel)
 			let ray = new Ray(r.origin, r.direction)
 
 			return cube.cells.some((cell, i) => !!ray.intersectsTriangleCell(cell, cube.positions))
 		})
+		if (hit !== -1)
+			module.exports.onCubeSelect(hit)
 	}})())
 
-
-
-
-shell.on("gl-render", function(dt) {
+shell.on("gl-render", (dt) => {
+	let t = performance.now()
 	shader.uniforms.uProjection = projection
 	shader.uniforms.uView = view
 	
 	cubeGeometry.bind(shader)
-	for (let cubeModel of cubeModels) {
+	for (let i = 0; i < cubeModels.length; i++) {
+		let cubeModel = cubeModels[i]
 		shader.uniforms.uModel = cubeModel
-		shader.uniforms.uColor = (hit === cubeModel) ? red : black
+		shader.uniforms.uColor = (hit === i) ? [ 1, 0, 0 ] :
+			((selected === i) ? [ 0, 1, 0 ] : [ 0, 0, 0 ])
 		cubeGeometry.draw(shell.gl.TRIANGLES)
 	}
 	
 	shader.uniforms.uModel = gutterModel
-	shader.uniforms.uColor = black
+	shader.uniforms.uColor = [ 0, 0, 0 ]
 	gutterGeometry.bind(shader)
 	gutterGeometry.draw(shell.gl.LINES)
+	
+	console.log((performance.now() - t))
 })
 
 shell.on("gl-error", function(e) {
@@ -166,8 +173,10 @@ shell.on("gl-error", function(e) {
 
 module.exports = {
 	selectCube: (i) => {
-		hit = i
+		selected = i
 	},
 
-	onCubeSelect: () => {}
+	onCubeSelect: (i) => {
+		// console.log(i)
+	}
 }
