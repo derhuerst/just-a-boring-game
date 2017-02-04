@@ -3,6 +3,7 @@
 const createGame = require('./game')
 const {connect} = require('./network')
 const ui = require('./ui')
+const gui = require('./gui')
 const prompt = require('./channel-prompt')
 
 prompt.onSubmit = (channel, isLeader) => {
@@ -24,6 +25,8 @@ prompt.onSubmit = (channel, isLeader) => {
 	ui.onSelectOwnField = game.selectOwnField
 
 	const onState = (state) => {
+		gui.setState(state)
+
 		const ownField = state[game.id() + '-field']
 		// todo: support more than one peer
 		const peerId = game.peerIds().values().next().value
