@@ -1,65 +1,41 @@
 'use strict'
 
-const createCore = require('./core')
-const createMap = require('./map')
-const createFinder = require('l1-path-finder')
-const {randomId} = require('./util')
-const {replicate} = require('./network')
+const createGame = require('./game')
+const {connect} = require('./network')
 const ui = require('./ui')
 const prompt = require('./channel-prompt')
 
-let id, peerIds
-const core = createCore()
-const blocks = createMap()
-const finder = createFinder(blocks)
-
 prompt.onSubmit = (channel, isLeader) => {
 	prompt.isWaiting()
-	id = replicate(core, channel, isLeader, (_peerIds) => {
+
+	const game = createGame(isLeader)
+
+	connect(game.id(), game, channel, isLeader, (peerIds) => {
 		prompt.hide()
 
-		peerIds = _peerIds
-		console.info('connected to peers', ...Array.from(peerIds))
+		console.info('peers:', ...Array.from(peerIds))
+		game.init(peerIds)
 
-		if (isLeader) {
-			core.set('blocks', blocks.data)
-			for (let peerId of peerIds)
-				core.set(peerId + '-field', {
-					x: Math.round(Math.random() * 20),
-					y: Math.round(Math.random() * 20)
-				})
-		}
-
-		core.on('change', onChange)
+		game.on('state', onState)
 	})
-}
 
-ui.onAddBlock = (x, y) => {
-	blocks.set(x, y, 1)
-	core.set('blocks', blocks.data)
-}
-ui.onRemoveBlock = (x, y) => {
-	blocks.set(x, y, 0)
-	core.set('blocks', blocks.data)
-}
-ui.onSelectOwnField = (x, y) => {
-	core.set(id + '-field', {x, y})
-}
+	ui.onAddBlock = game.addBlock
+	ui.onRemoveBlock = game.removeBlock
+	ui.onSelectOwnField = game.selectOwnField
 
-const onChange = (key, value) => {
-	// todo: don't update if own message
-	blocks.data = core.get('blocks')
+	const onState = (state) => {
+		const ownField = state[game.id() + '-field']
+		console.log('ownField', ownField)
+		// todo: support more than one peer
+		const peerId = game.peerIds().values().next().value
+		console.log('peerId', peerId, game.peerIds())
+		const peerField = state[peerId + '-field']
+		console.log('peerField', peerField)
 
-	const ownField = core.get(id + '-field')
-	// todo: support more than one peer
-	const peerId = peerIds.values().next().value
-	const peerField = core.get(peerId + '-field')
+		ui.setBlocks(game.map())
+		ui.selectOwnField(ownField)
+		ui.selectPeerField(peerField)
 
-	ui.setBlocks(blocks)
-	ui.selectOwnField(ownField)
-	ui.selectPeerField(peerField)
-
-	const p = []
-	if (ownField && peerField)
-		finder.search(ownField.x, ownField.y, peerField.x, peerField.y, p)
+		const p = game.findPath(ownField.x, ownField.y, peerField.x, peerField.y)
+	}
 }

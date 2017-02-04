@@ -8,17 +8,15 @@ const noop = () => {}
 
 const hub = new Hub('just-a-boring-game', 'https://signalhub.mafintosh.com')
 
-const replicate = (core, channel, initiator, cb = noop) => {
+const connect = (id, game, channel, initiate, cb = noop) => {
 	const replicate = () => {
-		const data = core.createStream()
-		data.pipe(peer).pipe(data)
+		peer.pipe(game.replicate()).pipe(peer)
 	}
 
-	const id = randomId()
 	const peerIds = new Set() // in preparation for multiple peers
 
-	console.info('id:', id, 'channel:', channel, 'initiator:', initiator)
-	const peer = new Peer({initiator, channelName: channel})
+	console.info('id:', id, 'channel:', channel, 'initiate:', initiate)
+	const peer = new Peer({initiator: initiate, channelName: channel})
 
 	if (process.env.NODE_ENV === 'dev') {
 		peer.on('error', (err) => console.error('peer error', err))
@@ -41,4 +39,4 @@ const replicate = (core, channel, initiator, cb = noop) => {
 	})
 }
 
-module.exports = {replicate}
+module.exports = {connect}
