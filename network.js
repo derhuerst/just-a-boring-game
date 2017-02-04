@@ -2,42 +2,42 @@
 
 const Hub = require('signalhub')
 const Peer = require('simple-peer')
+const {randomId} = require('./util')
 
 const noop = () => {}
 
 const hub = new Hub('just-a-boring-game', 'https://signalhub.mafintosh.com')
 
 const replicate = (core, channel, initiator, cb = noop) => {
-	console.info('initiator?', initiator, 'channel', channel)
+	const replicate = () => {
+		const data = core.createStream()
+		data.pipe(peer).pipe(data)
+	}
 
-	const peer = new Peer({
-		initiator,
-		channelName: channel,
-		// trickle: false // todo: what the hell is this?
-	})
+	const id = randomId()
+	const peerIds = new Set() // in preparation for multiple peers
+
+	console.info('id:', id, 'channel:', channel, 'initiator:', initiator)
+	const peer = new Peer({initiator, channelName: channel})
 
 	if (process.env.NODE_ENV === 'dev') {
 		peer.on('error', (err) => console.error('peer error', err))
 		peer.on('connect', () => console.info('peer open'))
 		peer.on('close', () => console.warn('peer closed'))
 	}
+	peer.once('connect', () => cb(peerIds))
+	peer.once('connect', replicate)
 
 	const subscription = hub.subscribe(channel)
 	subscription.on('data', (signal) => {
-		if (signal.fromInitiator === initiator) return
+		if (signal.from === id) return
+		peerIds.add(signal.from)
 		peer.signal(signal)
 	})
 
 	peer.on('signal', (signal) => {
-		signal.fromInitiator = initiator
+		signal.from = id
 		hub.broadcast(channel, signal)
-	})
-	peer.once('connect', () => subscription.destroy())
-
-	peer.once('connect', () => {
-		const c = core.createStream()
-		c.pipe(peer).pipe(c)
-		cb()
 	})
 }
 

@@ -8,22 +8,26 @@ const {replicate} = require('./network')
 const ui = require('./ui')
 const prompt = require('./channel-prompt')
 
+let id, peerIds
 const core = createCore()
 const blocks = createMap()
 const finder = createFinder(blocks)
 
-let isLeader
-prompt.onSubmit = (channel, leader) => {
-	isLeader = leader
+prompt.onSubmit = (channel, isLeader) => {
 	prompt.isWaiting()
-	replicate(core, channel, isLeader, () => {
-		console.info('connected to peer, replicating')
+	id = replicate(core, channel, isLeader, (_peerIds) => {
 		prompt.hide()
+
+		peerIds = _peerIds
+		console.info('connected to peers', ...Array.from(peerIds))
 
 		if (isLeader) {
 			core.set('blocks', blocks.data)
-			core.set('leader-field', {x: 0, y: 0})
-			core.set('follower-field', {x: 20, y: 20})
+			for (let peerId of peerIds)
+				core.set(peerId + '-field', {
+					x: Math.round(Math.random() * 20),
+					y: Math.round(Math.random() * 20)
+				})
 		}
 
 		core.on('change', onChange)
@@ -39,14 +43,17 @@ ui.onRemoveBlock = (x, y) => {
 	core.set('blocks', blocks.data)
 }
 ui.onSelectOwnField = (x, y) => {
-	core.set(isLeader ? 'leader-field' : 'follower-field', {x, y})
+	core.set(id + '-field', {x, y})
 }
 
-const onChange = () => {
+const onChange = (key, value) => {
+	// todo: don't update if own message
 	blocks.data = core.get('blocks')
 
-	const ownField = isLeader ? core.get('leader-field') : core.get('follower-field')
-	const peerField = isLeader ? core.get('follower-field') : core.get('leader-field')
+	const ownField = core.get(id + '-field')
+	// todo: support more than one peer
+	const peerId = peerIds.values().next().value
+	const peerField = core.get(peerId + '-field')
 
 	ui.setBlocks(blocks)
 	ui.selectOwnField(ownField)
