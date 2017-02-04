@@ -20,7 +20,13 @@ prompt.onSubmit = (channel, leader) => {
 		console.info('connected to peer, replicating')
 		prompt.hide()
 
-		if (isLeader) core.set('blocks', blocks.data)
+		if (isLeader) {
+			core.set('blocks', blocks.data)
+			core.set('leader-field', {x: 0, y: 0})
+			core.set('follower-field', {x: 20, y: 20})
+		}
+
+		core.on('change', onChange)
 	})
 }
 
@@ -36,7 +42,7 @@ ui.onSelectOwnField = (x, y) => {
 	core.set(isLeader ? 'leader-field' : 'follower-field', {x, y})
 }
 
-core.on('change', () => {
+const onChange = () => {
 	blocks.data = core.get('blocks')
 
 	const ownField = isLeader ? core.get('leader-field') : core.get('follower-field')
@@ -47,5 +53,6 @@ core.on('change', () => {
 	ui.selectPeerField(peerField)
 
 	const p = []
-	finder.search(ownField.x, ownField.y, peerField.x, peerField.y, p)
-})
+	if (ownField && peerField)
+		finder.search(ownField.x, ownField.y, peerField.x, peerField.y, p)
+}
