@@ -34,9 +34,9 @@ let projection  = mat4.create()
 let view        = mat4.create()
 let gutterModel = mat4.create()
 const getCubeModels = require('./cubeModels.js')
-let cubes = ndarray([], [ 20, 20 ])
 let cubeModels = []
 
+let cubes = ndarray([], [ 20, 20 ])
 const ownField = {}
 const peerField = {}
 let hit = {}
@@ -188,6 +188,7 @@ shell.on("gl-render", () => {
 			if (cubes.get(i, j)) {
 				shader.uniforms.uModel = cubeModels[i][j]
 
+				// todo: find a way to color fields
 				if (hit.x === i && hit.y === j) {
 					shader.uniforms.uColor = [ 1, 0, 0 ]
 				} else if (ownField.x === i && ownField.y === j) {
