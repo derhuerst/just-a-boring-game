@@ -39,8 +39,8 @@ ui.onSelectOwnField = (x, y) => {
 core.on('change', () => {
 	blocks.data = core.get('blocks')
 
-	const ownField = isLeader ? core.set('leader-field') : core.set('follower-field')
-	const peerField = isLeader ? core.set('follower-field') : core.set('leader-field')
+	const ownField = isLeader ? core.get('leader-field') : core.get('follower-field')
+	const peerField = isLeader ? core.get('follower-field') : core.get('leader-field')
 
 	ui.setBlocks(blocks)
 	ui.selectOwnField(ownField)
