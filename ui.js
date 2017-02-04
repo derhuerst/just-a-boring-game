@@ -6,37 +6,17 @@ const normals = require('normals')
 const mat4 = require('gl-matrix').mat4
 const vec3 = require('gl-matrix').vec3
 const vec4 = require('gl-matrix').vec4
-
-const shell = require('gl-now')({
-	tickRate: 50
-})
-
-shell.bind("move-left", "left", "A")
-shell.bind("move-right", "right", "D")
-shell.bind("move-forward", "up", "W")
-shell.bind("move-backward", "down", "S")
-shell.bind("rotate-left", "Q")
-shell.bind("rotate-right", "E")
-
-
-
+const shell = require('gl-now')({ tickRate: 50 })
 const glslify = require('glslify')
 const createShader = require('gl-shader')
-
-
 const createGeometry = require('gl-geometry')
 
 const cube = require('primitive-cube')()
+const gutterPositions = require('./gutterPositions.js')
 
 const createCamera = require('./birds-eye-camera.js')
-
-
-
-
-
 const pick = require('camera-picking-ray')
 const Ray = require('ray-3d')
- 
 
 
 
@@ -47,11 +27,19 @@ let cubeGeometry
 let gutterGeometry
 let shader
 
+let projection  = mat4.create()
+let view        = mat4.create()
+let gutterModel = mat4.create()
+const cubeModels = require('./cubeModels.js')
+
+let hit
+let selected
+
+
+
 shell.on("gl-init", function() {
 	shell.gl.enable(shell.gl.DEPTH_TEST)
-	//shell.gl.enable(shell.gl.CULL_FACE)
 
-	// camera
 	camera = createCamera({
 		alignment: [ 0.707, 0, 0.707 ],
 		target: [ 0, 0, 0 ],
@@ -64,11 +52,6 @@ shell.on("gl-init", function() {
 	cubeGeometry.attr('normal', cube.normals)
 	cubeGeometry.faces(cube.cells)
 
-	let gutterPositions = []
-	for (let i = -10; i <= 10; i++) {
-		gutterPositions.push([ i, 0, -10 ], [ i, 0, 10 ])
-		gutterPositions.push([ -10, 0, i ], [ 10, 0, i ])
-	}
 	gutterGeometry = createGeometry(shell.gl)
 	gutterGeometry.attr('position', gutterPositions)
 
@@ -81,17 +64,10 @@ shell.on("gl-init", function() {
 
 
 
-
-let projection  = mat4.create()
-let view        = mat4.create()
-let gutterModel = mat4.create()
-let cubeModels  = [ [], [], [], [], [], [], [] ]
-cubeModels[0] = mat4.create()
-mat4.translate(cubeModels[0], cubeModels[0], [ -7.5, .5, -7.5 ])
-for (let i = 1; i <= 6; i++)
-	mat4.translate(cubeModels[i], cubeModels[i-1], [ 2, 0, 2 ])
-let hit
-let selected
+shell.bind("move-left", "left", "A")
+shell.bind("move-right", "right", "D")
+shell.bind("move-forward", "up", "W")
+shell.bind("move-backward", "down", "S")
 
 shell.on('tick', (() => {
 	let width = 20
@@ -105,6 +81,7 @@ shell.on('tick', (() => {
 		camera.rotate(shell.scroll[0])
 		camera.zoom(shell.scroll[1]) // Kinda unnecessary given that we employ an orthographic projection later.
 		view = camera.view()
+		// projection = camera.projection()
 
 		const fieldOfView = Math.PI / 4
 		let aspectRatio = shell.width / shell.height
@@ -143,10 +120,12 @@ shell.on('tick', (() => {
 		})
 		if (hit !== -1)
 			module.exports.onCubeSelect(hit)
-	}})())
+}})())
+
+
 
 shell.on("gl-render", (dt) => {
-	let t = performance.now()
+	// let t = performance.now()
 	shader.uniforms.uProjection = projection
 	shader.uniforms.uView = view
 	
@@ -164,12 +143,18 @@ shell.on("gl-render", (dt) => {
 	gutterGeometry.bind(shader)
 	gutterGeometry.draw(shell.gl.LINES)
 	
-	console.log((performance.now() - t))
+	// console.log((performance.now() - t))
 })
+
+
 
 shell.on("gl-error", function(e) {
 	throw new Error("WebGL not supported :(")
 })
+
+
+
+
 
 module.exports = {
 	selectCube: (i) => {
