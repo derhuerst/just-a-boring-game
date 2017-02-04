@@ -11,16 +11,16 @@ const mat4 = require('gl-matrix').mat4
 // prototype of all birds eye cameras
 const birdsEyeProto = {
 	// wsad: An array of 4 ints, usually the number of times w, s, a and d have been pressed since the last call, respectively.
-	move: function (wsad) {
+	move: function (dt, wsad) {
 		let change = vec2.create()
-		change[0] += (wsad[0] - wsad[1]) / 50
-		change[1] += (wsad[2] - wsad[3]) / 50 // The signs are inverted here because the x-axis points to the right, but a goes to the left.
+		change[0] += wsad[0] - wsad[1] 
+		change[1] += wsad[2] - wsad[3] // The signs are inverted here because the x-axis points to the right, but a goes to the left.
 
 		let rotation = mat2.create()
 		mat2.rotate(rotation, rotation, this.rotationY)
 		vec2.transformMat2(change, change, rotation)
 
-		let distanceCovered = this.speed * this.distance / 10
+		let distanceCovered = dt / 1000 * this.speed * this.distance / 10
 		vec2.scale(change, change, distanceCovered)
 
 		this.target[0] -= change[1] // -x is left
