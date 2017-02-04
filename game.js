@@ -1,8 +1,10 @@
 'use strict'
 
 const {EventEmitter} = require('events')
+const Boat = require('scuttleboat')
+const Adapter = require('./scuttlebutt-ndarray')
+const RArray = require('r-array')
 const Model = require('scuttlebutt/model')
-const createNamespace = require('./scuttlespace')
 const ndarray = require('ndarray')
 const pack = require('ndarray-pack')
 const {randomId} = require('./util')
@@ -23,43 +25,46 @@ const createGame = (isLeader, opt = {}) => {
 
 	// state
 
-	const model = new Model()
-
-	const mapNS = createNamespace(model, 'map')
-	const map = ndarray(mapNS, [opt.width, opt.height])
-
 	const id = randomId()
-	let peerIds = new Set()
+	const model = new Boat({constructors: {Adapter, RArray, Model}})
+
+	const map = model.add('map', 'Adapter')
+	const mapView = ndarray(map, [opt.width, opt.height])
+	const players = model.add('players', 'RArray')
+	const fields = model.add('fields', 'Model')
+	const resources = model.add('resources', 'Model')
 
 	// game -> model
 
 	const addBlock = (x, y) => {
-		map.set(x, y, 1)
+		mapView.set(x, y, 1)
 	}
 	const removeBlock = (x, y) => {
-		map.set(x, y, 0)
+		mapView.set(x, y, 0)
 	}
 
 	const selectOwnField = (x, y) => {
-		model.set(id + '-field', {x, y})
+		fields.set(id, {x, y})
 	}
 
-	const init = (_peerIds) => {
-		peerIds = _peerIds
-
-		model.set(id + '-field', {
+	const init = (peerIds) => {
+		players.push(id)
+		fields.set(id, {
 			x: Math.round(Math.random() * opt.width),
 			y: Math.round(Math.random() * opt.height)
 		})
+		resources.set(id, {a: 0, b: 0, c: 0})
 
 		if (isLeader) {
-			pack(createMap(opt.width, opt.height), map)
+			pack(createMap(opt.width, opt.height), mapView)
 
 			for (let peerId of peerIds) {
-				model.set(peerId + '-field', {
+				players.push(peerId)
+				fields.set(peerId, {
 					x: Math.round(Math.random() * opt.width),
 					y: Math.round(Math.random() * opt.height)
 				})
+				resources.set(peerId, {a: 0, b: 0, c: 0})
 			}
 		}
 	}
@@ -67,7 +72,7 @@ const createGame = (isLeader, opt = {}) => {
 	// utilities
 
 	const findPath = (fromX, fromY, toX, toY) => {
-		const finder = createFinder(map)
+		const finder = createFinder(mapView)
 		const path = []
 		finder.search(fromX, fromY, toX, toY, path)
 		return path
@@ -76,12 +81,11 @@ const createGame = (isLeader, opt = {}) => {
 	// model -> game
 
 	model.on('change', (key, value) => {
-		if (mapNS.isOwnChange(key)) return
 		game.emit('state', model.toJSON(), key, value)
 	})
 
 	game.replicate = () => model.createStream()
-	game.map = () => map
+	game.map = () => mapView
 	game.id = () => id
 	game.peerIds = () => peerIds
 	game.addBlock = addBlock
