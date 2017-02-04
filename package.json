@@ -20,7 +20,16 @@
     "node": ">=6"
   },
   "dependencies": {
+    "camera-picking-ray": "^1.0.1",
+    "gl-geometry": "^3.1.1",
+    "gl-matrix": "^2.3.2",
+    "gl-now": "^1.4.0",
+    "gl-shader": "^4.2.1",
+    "glslify": "^6.0.1",
     "gossip-object": "^2.3.4",
+    "normals": "^1.1.0",
+    "primitive-cube": "^2.0.0",
+    "ray-3d": "^1.1.1",
     "signalhub": "^4.8.0",
     "simple-peer": "^6.2.1"
   },
@@ -30,7 +39,7 @@
     "wzrd": "^1.5.0"
   },
   "scripts": {
-    "build": "env NODE_ENV=production browserify -t envify index.js > bundle.js",
-    "start": "env NODE_ENV=dev wzrd index.js -- -d -t envify"
+    "build": "env NODE_ENV=production browserify -t envify -t glslify index.js > bundle.js",
+    "start": "env NODE_ENV=dev wzrd index.js -- -d -t envify -t glslify"
   }
 }
