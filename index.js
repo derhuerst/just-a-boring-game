@@ -6,19 +6,15 @@ const {replicate} = require('./network')
 const ui = require('./ui')
 
 const core = createCore()
-
-// init
-core.set('some-field', 'foo')
-ui.change('foo')
+replicate(core, () => console.info('connected to peer, replicating'))
 
 core.on('change', () => {
-	const value = core.get('some-field')
-	ui.change(value)
+	const i = core.get('selected-cube')
+	ui.selectCube(i)
 })
-ui.on('change', (value) => {
-	core.set('some-field', value)
-})
+ui.onCubeSelect = (i) => {
+	core.set('selected-cube', i)
+}
 
-replicate(core, () => {
-	console.info('connected to peer, replicating')
-})
+// init
+core.set('selected-cube', 0)
