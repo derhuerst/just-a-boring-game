@@ -15,6 +15,7 @@ const cube = require('primitive-cube')()
 const gutterPositions = require('./gutterPositions.js')
 
 const createCamera = require('./birds-eye-camera.js')
+const createZoomingOrthoProjection = require('./zooming-ortho-projection.js')
 const pick = require('camera-picking-ray')
 const Ray = require('ray-3d')
 
@@ -23,6 +24,7 @@ const Ray = require('ray-3d')
 
 
 let camera
+let zoomingOrthoProjection
 let cubeGeometry
 let gutterGeometry
 let shader
@@ -45,6 +47,10 @@ shell.on("gl-init", function() {
 		target: [ 0, 0, 0 ],
 		distance: 10,
 		speed: 20
+	})
+	zoomingOrthoProjection = createZoomingOrthoProjection({
+		width: shell.width,
+		height: shell.height
 	})
 
 	cubeGeometry = createGeometry(shell.gl)
@@ -69,9 +75,7 @@ shell.bind("move-right", "right", "D")
 shell.bind("move-forward", "up", "W")
 shell.bind("move-backward", "down", "S")
 
-shell.on('tick', (() => {
-	let width = 20
-	return () => {
+shell.on('tick', () => {
 		camera.move([
 			shell.down("move-forward"),
 			shell.down("move-backward"),
@@ -81,19 +85,11 @@ shell.on('tick', (() => {
 		camera.rotate(shell.scroll[0])
 		camera.zoom(shell.scroll[1]) // Kinda unnecessary given that we employ an orthographic projection later.
 		view = camera.view()
-		// projection = camera.projection()
-
-		const fieldOfView = Math.PI / 4
-		let aspectRatio = shell.width / shell.height
-		const near = 0.01 	
-		const far  = 500
-		width *= Math.exp(shell.scroll[1]/500) // zooming
-		let height = width / aspectRatio
-
-		mat4.ortho(
-			projection,
-			-width/2, width/2, -height/2, height/2,
-			near, far)
+		
+		zoomingOrthoProjection.width = shell.width
+		zoomingOrthoProjection.height = shell.height
+		zoomingOrthoProjection.zoom(shell.scroll[1])
+		projection = zoomingOrthoProjection.projection()
 
 
 
@@ -120,7 +116,7 @@ shell.on('tick', (() => {
 		})
 		if (hit !== -1)
 			module.exports.onCubeSelect(hit)
-}})())
+})
 
 
 

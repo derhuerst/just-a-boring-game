@@ -105,14 +105,15 @@ const createBirdsEye = (options = {}) => {
 	let b = Object.create(birdsEyeProto)
 
 	// default values:
-	b.up        = [ 0, 1, 0 ] // should be normalized
-	b.alignment = [ 0, 0, 1 ] // should be orthogonal to b.up and normalized
-	b.distance  = 10
-	b.rotationX = - Math.PI / 4
-	b.rotationY = 0 // todo: defineProperty read only
-	b.target    = [ 0, 0, 0 ]
-	b.speed     = 5 // units covered per second
-	Object.assign(b, options)	
+	Object.assign(b, {
+		up:        [ 0, 1, 0 ], // should be normalized
+		alignment: [ 0, 0, 1 ], // should be orthogonal to up and normalized
+		distance:  10,
+		rotationX: - Math.PI / 4,
+		rotationY: 0, // todo: defineProperty read only
+		target:    [ 0, 0, 0 ],
+		speed:     5 // units covered per second
+	}, options)	
 	
 	b.setPlane(b.up, b.alignment, b.thirdAxis)
 
