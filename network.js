@@ -3,18 +3,11 @@
 const Hub = require('signalhub')
 const Peer = require('simple-peer')
 
-const isInitiator = () => location.hash.slice(-5) === '-init'
-const getChannel = () => isInitiator()
-	? location.hash.slice(1, -5)
-	: location.hash.slice(1)
-
 const noop = () => {}
 
 const hub = new Hub('just-a-boring-game', 'https://signalhub.mafintosh.com')
 
-const replicate = (core, cb = noop) => {
-	const initiator = isInitiator()
-	const channel = getChannel()
+const replicate = (core, channel, initiator, cb = noop) => {
 	console.info('initiator?', initiator, 'channel', channel)
 
 	const peer = new Peer({
