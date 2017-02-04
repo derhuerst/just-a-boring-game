@@ -1,17 +1,8 @@
 'use strict'
 
-const Model = require('gossip-object')
+const Model = require('scuttlebutt/model')
 const {randomId} = require('./util')
 
-const createCore = () => {
-	const core = new Model()
-	core.add = (key, value) => {
-		const id = randomId()
-		core.set(id, value)
-		core.set(key, value)
-		return id
-	}
-	return core
-}
+const createCore = () => new Model()
 
 module.exports = createCore
