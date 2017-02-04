@@ -6,6 +6,7 @@ let gutterPositions = (n) => {
 		gutter.push([ i - 0.5, 0, -0.5 ], [ i - 0.5, 0, 19.5 ])
 		gutter.push([ -0.5, 0, i - 0.5 ], [ 19.5, 0, i - 0.5 ])
 	}
+	return gutter
 }
 
 module.exports = gutterPositions

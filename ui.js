@@ -10,6 +10,7 @@ const shell = require('gl-now')({ tickRate: 50 })
 const glslify = require('glslify')
 const createShader = require('gl-shader')
 const createGeometry = require('gl-geometry')
+const ndarray = require('ndarray')
 
 const cube = require('primitive-cube')()
 const gutterPositions = require('./gutterPositions.js')(20)
@@ -33,7 +34,7 @@ let projection  = mat4.create()
 let view        = mat4.create()
 let gutterModel = mat4.create()
 const getCubeModels = require('./cubeModels.js')
-let cubes = []
+let cubes = ndarray([], [ 20, 20 ])
 let cubeModels = []
 
 let ownField
@@ -78,10 +79,10 @@ shell.on("gl-init", function() {
 		} else {
 			let field = calculatePlaneHit(shell.mouse, shell.width, shell.height, view, projection)
 			if (field) {
-				if (e.button === 0) {
-					module.exports.onSelectField(field.x, field.y)
-				} else if (e.button === 1) {
+				if (e.shiftKey) {
 					module.exports.onAddBlock(field.x, field.y)
+				} else {
+					module.exports.onSelectOwnField(field.x, field.y)
 				}
 			}
 		}
@@ -100,23 +101,26 @@ let calculateCubeHit = (mouse, width, height, geometry, models, view, projection
 	mat4.multiply(invProjView, projection, view)
 	mat4.invert(invProjView, invProjView)
 
-	for (let i = 0; i < blocks.shape[0]; i++) {
-		for (let j = 0; j < blocks.shape[1]; j++) {
-			let cubeModel = cubeModels[i][j]
-			let invModel = mat4.create()
-			let invProjViewModel = mat4.create()
-			mat4.invert(invModel, cubeModel)
-			mat4.multiply(invProjViewModel, invModel, invProjView)
+	for (let i = 0; i < cubes.shape[0]; i++) {
+		for (let j = 0; j < cubes.shape[1]; j++) {
+			if (cubes.get(i, j)) {
+				let cubeModel = cubeModels[i][j]
+				let invModel = mat4.create()
+				let invProjViewModel = mat4.create()
+				mat4.invert(invModel, cubeModel)
+				mat4.multiply(invProjViewModel, invModel, invProjView)
 
-			let r = {
-				origin: vec3.create(),
-				direction: vec3.create()
+				let r = {
+					origin: vec3.create(),
+					direction: vec3.create()
+				}
+				pick(r.origin, r.direction, mouse, [ 0, 0, width, height ], invProjViewModel)
+				let ray = new Ray(r.origin, r.direction)
+
+				if (cube.cells.some((cell, i) => !!ray.intersectsTriangleCell(cell, cube.positions))) {
+					return { x: i, y: j }
+				}
 			}
-			pick(r.origin, r.direction, mouse, [ 0, 0, width, height ], invProjViewModel)
-			let ray = new Ray(r.origin, r.direction)
-
-			if (cube.cells.some((cell, i) => !!ray.intersectsTriangleCell(cell, cube.positions)))
-				return { x: i, y: j }
 		}
 	}
 
