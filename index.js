@@ -15,7 +15,7 @@ prompt.onSubmit = (channel, isLeader) => {
 		prompt.hide()
 
 		console.info('peers:', ...Array.from(peerIds))
-		game.init(peerIds)
+		game.init(peerIds, isLeader)
 
 		game.on('state', onState)
 	})
