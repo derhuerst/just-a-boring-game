@@ -1,10 +1,10 @@
 'use strict'
 
-const createGame = require('./game')
-const {connect} = require('./network')
-const ui = require('./ui')
-const gui = require('./gui')
-const prompt = require('./channel-prompt')
+const createGame = require('./lib/game')
+const {connect} = require('./lib/network')
+const ui = require('./lib/ui')
+const gui = require('./lib/gui')
+const prompt = require('./lib/channel-prompt')
 
 prompt.onSubmit = (channel, isLeader) => {
 	prompt.isWaiting()
