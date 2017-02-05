@@ -35,7 +35,7 @@
     "primitive-cube": "^2.0.0",
     "r-array": "github:derhuerst/r-array",
     "ray-3d": "^1.1.1",
-    "scuttlebucket": "^0.2.3",
+    "scuttleboat": "0.0.1",
     "scuttlebutt": "^5.6.14",
     "signalhub": "^4.8.0",
     "simple-peer": "^6.2.1"

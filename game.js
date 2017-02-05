@@ -59,6 +59,8 @@ const createGame = (isLeader, opt = {}) => {
 			pack(createMap(opt.width, opt.height), mapView)
 
 			for (let peerId of peerIds) {
+				if (peerId === id) continue
+
 				players.push(peerId)
 				fields.set(peerId, {
 					x: Math.round(Math.random() * opt.width),
@@ -67,6 +69,8 @@ const createGame = (isLeader, opt = {}) => {
 				resources.set(peerId, {a: 0, b: 0, c: 0})
 			}
 		}
+
+		model.on('_update', onState)
 	}
 
 	// utilities
@@ -80,9 +84,7 @@ const createGame = (isLeader, opt = {}) => {
 
 	// model -> game
 
-	model.on('change', (key, value) => {
-		game.emit('state', model.toJSON(), key, value)
-	})
+	const onState = () => game.emit('state', model.toJSON())
 
 	game.replicate = () => model.createStream()
 	game.map = () => mapView

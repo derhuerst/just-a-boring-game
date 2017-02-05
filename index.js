@@ -26,16 +26,6 @@ prompt.onSubmit = (channel, isLeader) => {
 
 	const onState = (state) => {
 		gui.setState(state)
-
-		const ownField = state[game.id() + '-field']
-		// todo: support more than one peer
-		const peerId = game.peerIds().values().next().value
-		const peerField = state[peerId + '-field']
-
-		ui.setBlocks(game.map())
-		ui.selectOwnField(ownField)
-		ui.selectPeerField(peerField)
-
-		const p = game.findPath(ownField.x, ownField.y, peerField.x, peerField.y)
+		ui.state(state)
 	}
 }
