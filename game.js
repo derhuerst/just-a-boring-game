@@ -4,6 +4,7 @@ const {EventEmitter} = require('events')
 const Boat = require('scuttleboat')
 const Adapter = require('./scuttlebutt-ndarray')
 const RArray = require('r-array')
+const RValue = require('r-value')
 const Model = require('scuttlebutt/model')
 const ndarray = require('ndarray')
 const pack = require('ndarray-pack')
@@ -26,11 +27,12 @@ const createGame = (isLeader, opt = {}) => {
 	// state
 
 	const id = randomId()
-	const model = new Boat({constructors: {Adapter, RArray, Model}})
+	const model = new Boat({constructors: {Adapter, RArray, RValue, Model}})
 
 	const map = model.add('map', 'Adapter')
 	const mapView = ndarray(map, [opt.width, opt.height])
 	const players = model.add('players', 'RArray')
+	const player = model.add('player', 'RValue')
 	const fields = model.add('fields', 'Model')
 	const resources = model.add('resources', 'Model')
 
@@ -49,11 +51,12 @@ const createGame = (isLeader, opt = {}) => {
 
 	const init = (peerIds) => {
 		players.push(id)
+		player.set(id)
 		fields.set(id, {
 			x: Math.round(Math.random() * opt.width),
 			y: Math.round(Math.random() * opt.height)
 		})
-		resources.set(id, {a: 0, b: 0, c: 0})
+		resources.set(id, {a: 100, b: 100, c: 100})
 
 		if (isLeader) {
 			pack(createMap(opt.width, opt.height), mapView)
@@ -66,7 +69,7 @@ const createGame = (isLeader, opt = {}) => {
 					x: Math.round(Math.random() * opt.width),
 					y: Math.round(Math.random() * opt.height)
 				})
-				resources.set(peerId, {a: 0, b: 0, c: 0})
+				resources.set(peerId, {a: 100, b: 100, c: 100})
 			}
 		}
 

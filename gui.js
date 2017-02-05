@@ -51,9 +51,12 @@ c.innerText = '0'
 wrapper.appendChild(c)
 
 const setState = (state) => {
-	a.innerText = state.resources.a.toString()
-	b.innerText = state.resources.b.toString()
-	c.innerText = state.resources.c.toString()
+	const id = state.player
+	const res = state.resources[id]
+
+	a.innerText = res ? res.a.toString() : '–'
+	b.innerText = res ? res.b.toString() : '–'
+	c.innerText = res ? res.c.toString() : '–'
 }
 
 module.exports = {setState}
