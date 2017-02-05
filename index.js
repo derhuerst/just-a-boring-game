@@ -4,15 +4,14 @@ const createGame = require('./lib/game')
 const {connect} = require('./lib/network')
 const ui = require('./lib/ui')
 const gui = require('./lib/gui')
-const prompt = require('./lib/channel-prompt')
 
-prompt.onSubmit = (channel, isLeader) => {
-	prompt.isWaiting()
+gui.onSubmit = (channel, isLeader) => {
+	gui.isWaiting()
 
 	const game = createGame(isLeader)
 
 	connect(game.id(), game, channel, isLeader, (peerIds) => {
-		prompt.hide()
+		gui.hidePrompt()
 
 		console.info('peers:', ...Array.from(peerIds))
 		game.init(peerIds, isLeader)
